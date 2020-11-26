@@ -32,7 +32,7 @@ export class LoginService {
 
     return $Axios
       .post(
-        process.env.api + this.loginPath,
+        process.env.API + this.loginPath,
         {},
         { params, responseType: 'text' }
       )

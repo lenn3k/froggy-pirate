@@ -41,7 +41,7 @@ export class AllianceService {
     };
 
     return $Axios
-      .get(process.env.api + this.serviceUrl, {
+      .get(process.env.API + this.serviceUrl, {
         params,
         responseType: 'text',
       })
@@ -83,7 +83,7 @@ export class AllianceService {
       take: '100',
     };
     return $Axios
-      .get(process.env.api + this.fleetUserUrl, {
+      .get(process.env.API + this.fleetUserUrl, {
         params,
         responseType: 'text',
       })

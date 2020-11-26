@@ -1,24 +1,12 @@
-import axios, { AxiosResponse } from 'axios';
+import { AxiosResponse } from 'axios';
 import { LoginService } from './login.service';
 import * as convert from 'xml-js';
-import { from, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { $Axios } from '../axios-observable';
 import { Fleet } from '../models/fleet.model';
 import { User } from '../models/user.model';
-
-export function drilldown<T>(obj: any): T[] {
-  let drilldownObject = obj;
-  while (!Array.isArray(drilldownObject)) {
-    const keys = Object.keys(drilldownObject);
-    if (keys[0] === '0') {
-      return [];
-    }
-
-    drilldownObject = drilldownObject[keys[0]];
-  }
-  return drilldownObject.map((attrObj: any) => ({ ...attrObj._attributes }));
-}
+import { drilldown } from '../utils';
 
 export class AllianceService {
   private static instance: AllianceService;

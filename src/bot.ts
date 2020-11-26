@@ -1,13 +1,19 @@
-import { Client, Collection, Message, MessageEmbed } from 'discord.js';
-import { forkJoin } from 'rxjs';
-import { map, switchMap, tap } from 'rxjs/operators';
-import { Fleet } from './models/fleet.model';
-import { User } from './models/user.model';
+import {
+  Channel,
+  Client,
+  Collection,
+  Message,
+  MessageEmbed,
+  TextChannel,
+} from 'discord.js';
+
 import { AllianceService } from './services/alliance.service';
 import { LoginService } from './services/login.service';
 import * as fs from 'fs';
 import { Command } from './models/command.interface';
-import { arrayToMessages, calcValue } from './utils';
+import { MessageService } from './services/message.service';
+import { map, tap } from 'rxjs/operators';
+import { PSSMessage } from './models/pss-message.interface';
 
 export class DiscordBot {
   private static instance: DiscordBot;
@@ -16,7 +22,10 @@ export class DiscordBot {
   private commands: Collection<string, Command> = new Collection();
 
   private loginService: LoginService = new LoginService();
-  private allianceService: AllianceService = new AllianceService();
+  private messageService: MessageService = new MessageService();
+
+  private _fleetChannel: TextChannel | undefined;
+  private fleetChatInterval: NodeJS.Timeout | undefined;
 
   private constructor() {
     this.initialiseClient();
@@ -52,7 +61,6 @@ export class DiscordBot {
       .readdirSync('./dist/commands')
       .filter((file) => file.endsWith('.js'));
 
-
     for (const file of commandFiles) {
       const command = require(`./commands/${file}`) as Command;
       this.commands.set(command.name, command);
@@ -60,7 +68,7 @@ export class DiscordBot {
   }
 
   private setServices() {
-    this.allianceService = AllianceService.getInstance();
+    this.messageService = MessageService.getInstance();
     this.loginService = LoginService.getInstance();
   }
 
@@ -106,5 +114,89 @@ export class DiscordBot {
         message.reply('there was an error trying to execute that command!');
       }
     });
+  }
+
+  public set fleetChannel(channel: TextChannel | undefined) {
+    this._fleetChannel = channel;
+  }
+
+  public get fleetChannel(): TextChannel | undefined {
+    return this._fleetChannel;
+  }
+
+  public setFleetChannel(channel: TextChannel) {
+    this.fleetChannel = channel;
+  }
+
+  public async startFleetChat(message: Message) {
+    if (this.fleetChannel) {
+      this.fleetChatInterval = setInterval(() => this.echoFleetChat(), 60000);
+      message.channel.startTyping(1);
+      message.channel.send(
+        `I have started sending fleet chat to ${this.fleetChannel.toString()}`
+      );
+      message.channel.stopTyping();
+    } else {
+      message.channel.startTyping(1);
+      await message.channel.send(
+        'You must first set a channel with: `🐸 fleet-chat set #channel-name`'
+      );
+      message.channel.stopTyping();
+    }
+  }
+
+  public async stopFleetChat(message: Message) {
+    if (!this.fleetChannel || !this.fleetChatInterval) {
+      message.channel.startTyping(1);
+      await message.channel.send(`I was not reading fleet chat 🤷‍♂️🐸`);
+      message.channel.stopTyping();
+      return;
+    }
+
+    clearInterval(this.fleetChatInterval);
+    message.channel.startTyping(1);
+    message.channel.send(
+      `I have stopped sending fleet chat to ${this.fleetChannel.toString()}`
+    );
+    message.channel.stopTyping();
+  }
+
+  public async echoFleetChat() {
+    if (!this.fleetChannel) {
+      return;
+    }
+
+    const messagesCollection = await this.fleetChannel.messages.fetch({
+      limit: 20,
+    });
+
+    await this.messageService
+      .getFleetMessage('27763')
+      .pipe(
+        map((messages: PSSMessage[]) => {
+          if (!messagesCollection || !messagesCollection.size) {
+            // Channel is empty :shrug:
+            return messages;
+          }
+          const channelMessages = messagesCollection.array();
+          const messagesContent = channelMessages.map(
+            (message: Message) => message.content
+          );
+          return messages.filter(
+            (message: PSSMessage) =>
+              !messagesContent.includes(
+                `**${message.UserName}**: ${message.Message}`
+              )
+          );
+        }),
+        tap((messages: PSSMessage[]) => {
+          messages.forEach((message: PSSMessage) => {
+            this.fleetChannel!.send(
+              `**${message.UserName}**: ${message.Message}`
+            );
+          });
+        })
+      )
+      .subscribe();
   }
 }

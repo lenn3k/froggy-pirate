@@ -55,3 +55,16 @@ export function sortByStarsAndTrophy(a: User, b: User): number {
 
   return order;
 }
+
+export function drilldown<T>(obj: any): T[] {
+  let drilldownObject = obj;
+  while (!Array.isArray(drilldownObject)) {
+    const keys = Object.keys(drilldownObject);
+    if (keys[0] === '0') {
+      return [];
+    }
+
+    drilldownObject = drilldownObject[keys[0]];
+  }
+  return drilldownObject.map((attrObj: any) => ({ ...attrObj._attributes }));
+}

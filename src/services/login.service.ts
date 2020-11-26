@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from 'axios';
+import { AxiosResponse } from 'axios';
 import { Md5 } from 'ts-md5';
 import { $Axios } from '../axios-observable';
 import { tap } from 'rxjs/operators';

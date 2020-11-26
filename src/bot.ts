@@ -167,7 +167,7 @@ export class DiscordBot {
     }
 
     const messagesCollection = await this.fleetChannel.messages.fetch({
-      limit: 20,
+      limit: 30,
     });
 
     await this.messageService

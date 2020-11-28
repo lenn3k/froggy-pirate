@@ -14,6 +14,14 @@ module.exports = {
   description: 'List all targets in given division below given trophy count',
   async execute(message: Message, args: string[]): Promise<void> {
     const div = args[0].toUpperCase();
+
+    if (!div) {
+      message.channel.send(
+        'You must tell me which division you want targets for :frog:'
+      );
+      return;
+    }
+
     const trophyUpperLimit = Number.parseInt(args[1] || '20000', 10);
     message.channel.startTyping();
     await allianceService

@@ -13,14 +13,15 @@ module.exports = {
   name: 'targets',
   description: 'List all targets in given division below given trophy count',
   async execute(message: Message, args: string[]): Promise<void> {
-    const div = args[0].toUpperCase();
+    const divArg = args[0];
 
-    if (!div) {
+    if (!divArg) {
       message.channel.send(
         'You must tell me which division you want targets for :frog:'
       );
       return;
     }
+    const div = divArg.toUpperCase();
 
     const trophyUpperLimit = Number.parseInt(args[1] || '20000', 10);
     message.channel.startTyping();

@@ -1,4 +1,4 @@
-import { Message } from 'discord.js';
+import { Message, MessageEmbed } from 'discord.js';
 import { forkJoin } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { DiscordBot } from '../bot';
@@ -59,7 +59,7 @@ module.exports = {
         // Sort users
         map((userList: User[]) => userList.sort(sortByStarsAndTrophy)),
         // Take the top 200
-        map((userList: User[]) => userList.slice(0, 300))
+        map((userList: User[]) => userList.slice(0, 100))
       )
       // Second pipe because operator overloading :shrug:
       .pipe(
@@ -78,9 +78,17 @@ module.exports = {
         )
       )
       .subscribe((userList) => {
-        arrayToMessages(userList).forEach((element) => {
-          message.channel.send(element);
-        });
+        const array = arrayToMessages(userList, 2048);
+
+        array.forEach((content) =>
+          message.channel.send(
+            new MessageEmbed()
+              .setColor('#009900')
+              .setTitle('Targets for Div ' + div)
+              .setDescription(content)
+              .setTimestamp()
+          )
+        );
         message.channel.stopTyping();
       });
   },

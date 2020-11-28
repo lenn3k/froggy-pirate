@@ -1,4 +1,4 @@
-import { Message } from 'discord.js';
+import { Message, MessageEmbed } from 'discord.js';
 import { map } from 'rxjs/operators';
 import { User } from '../models/user.model';
 import { AllianceService } from '../services/alliance.service';
@@ -32,9 +32,17 @@ module.exports = {
         )
       )
       .subscribe((list: string[]) => {
-        arrayToMessages(list).forEach((element: string) => {
-          message.channel.send(element);
-        });
+        const array = arrayToMessages(list, 2048);
+
+        array.forEach((content) =>
+          message.channel.send(
+            new MessageEmbed()
+              .setColor('#009900')
+              .setTitle('Hellfire Marauders')
+              .setDescription(content)
+              .setTimestamp()
+          )
+        );
         message.channel.stopTyping();
       });
   },

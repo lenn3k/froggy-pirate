@@ -7,7 +7,6 @@ import {
   TextChannel,
 } from 'discord.js';
 
-import { AllianceService } from './services/alliance.service';
 import { LoginService } from './services/login.service';
 import * as fs from 'fs';
 import { Command } from './models/command.interface';
@@ -38,18 +37,18 @@ export class DiscordBot {
     return DiscordBot.instance;
   }
 
-  connect(): void {
-    this.client
+  async connect() {
+    await this.client
       .login(process.env.D_TOKEN)
       .then(async (_) => {
         const venomy = await this.client.users.fetch('280752268960071680');
         venomy.send(`I'm alive, master :frog:`);
         console.log('Connected to Discord');
-        this.findChannelAndStartFleetchat();
       })
       .catch((error) =>
         console.error(`Could not connect. Error: ${error.message}`)
       );
+    this.findChannelAndStartFleetchat();
   }
 
   /**
@@ -58,9 +57,13 @@ export class DiscordBot {
   private async findChannelAndStartFleetchat() {
     const channel = await this.client.channels.fetch('781634540752863262');
     if (channel) {
-      this.fleetChannel = channel as TextChannel;
-      this.fleetChatInterval = setInterval(() => this.echoFleetChat(), 60000);
-      console.log(`Starting fleetchat on boot to ${channel.toString()}`);
+      DiscordBot.getInstance().fleetChannel = channel as TextChannel;
+      DiscordBot.getInstance().fleetChatInterval = setInterval(
+        () => this.echoFleetChat(),
+        60000
+      );
+      this.echoFleetChat(),
+        console.log(`Starting fleetchat on boot to ${channel.toString()}`);
     }
   }
 
@@ -190,7 +193,7 @@ export class DiscordBot {
     }
 
     const messagesCollection = await this.fleetChannel.messages.fetch({
-      limit: 30,
+      limit: 50,
     });
 
     await this.messageService
@@ -202,18 +205,19 @@ export class DiscordBot {
             return messages;
           }
           const channelMessages = messagesCollection.array();
-          const messagesContent = channelMessages.map(
-            (message: Message) => message.content
+          const messagesContent = channelMessages.map((message: Message) =>
+            message.content.toLowerCase()
           );
           return messages.filter(
             (message: PSSMessage) =>
-              !messagesContent.includes(
-                `**${message.UserName}**: ${message.Message}`
+              !messagesContent.some((v) =>
+                v.includes(`${message.Message.toLowerCase().trim()}`)
               )
           );
         }),
         tap((messages: PSSMessage[]) => {
           messages.forEach((message: PSSMessage) => {
+            console.log(message);
             this.fleetChannel!.send(
               `**${message.UserName}**: ${message.Message}`
             );

@@ -20,7 +20,6 @@ export class LoginService {
   constructor() {}
 
   login(): Observable<any> {
-    this.deviceKey = '0f1d99fa-bdb7-4c81-94f2-718a3293fce9';
     const params = {
       deviceKey: this.getDeviceKey(),
       isJailBroken: 'false',
@@ -73,7 +72,6 @@ export class LoginService {
         random(h),
       ].join('');
     }
-
     return this.deviceKey;
   }
 

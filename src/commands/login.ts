@@ -1,4 +1,4 @@
-import { Message } from 'discord.js';
+import { Message, MessageEmbed } from 'discord.js';
 import { LoginService } from '../services/login.service';
 
 const loginService = LoginService.getInstance();
@@ -11,9 +11,13 @@ module.exports = {
     message.channel.startTyping(1);
     const count = Number.parseInt(args[0], 10);
     for (let index = 0; index < count; index++) {
-      loginService
-        .login()
-        .subscribe(() => message.channel.send(loginService.getAccessToken()));
+      loginService.login().subscribe(() => {
+        const embed = new MessageEmbed()
+          .addField('DeviceKey', loginService.getDeviceKey())
+          .addField('Checksum', loginService.getChecksum())
+          .addField('AccessToken', loginService.getAccessToken());
+        message.channel.send(embed);
+      });
     }
 
     message.channel.stopTyping();

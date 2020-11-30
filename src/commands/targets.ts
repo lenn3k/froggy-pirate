@@ -22,8 +22,24 @@ module.exports = {
       return;
     }
     const div = divArg.toUpperCase();
+    let trophyUpperLimit = 20000;
 
-    const trophyUpperLimit = Number.parseInt(args[1] || '20000', 10);
+    let error = undefined;
+
+    const maxTrophies = args[1];
+    if (maxTrophies) {
+      const tempTrophies = Number.parseInt(maxTrophies, 10);
+      if (isNaN(tempTrophies)) {
+        error = `'${maxTrophies}' is not a number`;
+      } else {
+        trophyUpperLimit = tempTrophies;
+      }
+    }
+    if (error) {
+      await message.channel.send(error);
+      return;
+    }
+
     message.channel.startTyping();
     await allianceService
       .getFleetsForDiv(div)
@@ -59,12 +75,6 @@ module.exports = {
             (user) => Number.parseInt(user.Trophy, 10) < trophyUpperLimit
           )
         ),
-
-        // Filter out all ships below 2 stars
-        map((userList: User[]) =>
-          userList.filter((user) => calcValue(user) >= 1)
-        ),
-
         // Sort users
         map((userList: User[]) => userList.sort(sortByStarsAndTrophy)),
         // Take the top 200
@@ -78,15 +88,24 @@ module.exports = {
             (user: User, index: number) =>
               `${index + 1 < 10 ? '0' + (index + 1) : index + 1}. **${calcValue(
                 user
-              )}**(${user.AllianceScore})⭐ ${user.Name} ${user.Trophy}*(${
+              )}**(${user.AllianceScore})⭐ ${user.Name} **${user.Trophy}**(${
                 user.HighestTrophy
-              })* [Battles left: ${
+              }) *[${user.AllianceName}]* [${
                 6 - Number.parseInt(user.TournamentBonusScore, 10)
-              }]  \n`
+              }/6]  \n`
           )
         )
       )
       .subscribe((userList) => {
+        if (userList.length <= 0) {
+          message.channel.send(
+            'I found no targets for the inputs you provided'
+          );
+          message.channel.stopTyping();
+
+          return;
+        }
+
         const array = arrayToMessages(userList, 2048);
 
         array.forEach((content) =>

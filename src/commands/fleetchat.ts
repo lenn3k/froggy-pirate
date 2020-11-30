@@ -8,9 +8,9 @@ module.exports = {
   name: 'fleetchat',
   description: 'Set a channel to echo fleet chat',
   execute(message: Message, args: string[]): void {
+    const channel = message.mentions.channels.first();
     switch (args[0]) {
       case 'set':
-        const channel = message.mentions.channels.first();
         if (channel) {
           bot.setFleetChannel(channel);
           message.channel.send(
@@ -22,6 +22,9 @@ module.exports = {
 
         break;
       case 'start':
+        if (channel) {
+          bot.setFleetChannel(channel);
+        }
         bot.startFleetChat(message);
         break;
       case 'stop':

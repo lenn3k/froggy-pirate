@@ -41,10 +41,27 @@ export class DiscordBot {
   connect(): void {
     this.client
       .login(process.env.D_TOKEN)
-      .then((_) => console.log('Connected to Discord'))
+      .then(async (_) => {
+        const venomy = await this.client.users.fetch('280752268960071680');
+        venomy.send(`I'm alive, master :frog:`);
+        console.log('Connected to Discord');
+        this.findChannelAndStartFleetchat();
+      })
       .catch((error) =>
         console.error(`Could not connect. Error: ${error.message}`)
       );
+  }
+
+  /**
+   * TODO: Replace this with a database
+   */
+  private async findChannelAndStartFleetchat() {
+    const channel = await this.client.channels.fetch('781562644195835927');
+    if (channel) {
+      this.fleetChannel = channel as TextChannel;
+      this.fleetChatInterval = setInterval(() => this.echoFleetChat(), 60000);
+      console.log(`Starting fleetchat on boot to ${channel.toString()}`);
+    }
   }
 
   private initialiseClient(): void {
@@ -130,6 +147,12 @@ export class DiscordBot {
 
   public async startFleetChat(message: Message) {
     if (this.fleetChannel) {
+      if (this.fleetChatInterval) {
+        message.channel.send(
+          `I'm already sending fleet chat to ${this.fleetChannel.toString()}`
+        );
+        return;
+      }
       this.fleetChatInterval = setInterval(() => this.echoFleetChat(), 60000);
       message.channel.startTyping(1);
       message.channel.send(

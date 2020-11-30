@@ -217,7 +217,6 @@ export class DiscordBot {
         }),
         tap((messages: PSSMessage[]) => {
           messages.forEach((message: PSSMessage) => {
-            console.log(message);
             this.fleetChannel!.send(
               `**${message.UserName}**: ${message.Message}`
             );

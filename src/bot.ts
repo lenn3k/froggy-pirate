@@ -55,7 +55,9 @@ export class DiscordBot {
    * TODO: Replace this with a database
    */
   private async findChannelAndStartFleetchat() {
-    const channel = await this.client.channels.fetch('781634540752863262');
+    const channel = await this.client.channels.fetch(
+      process.env.FLEET_CHANNEL as string
+    );
     if (channel) {
       DiscordBot.getInstance().fleetChannel = channel as TextChannel;
       DiscordBot.getInstance().fleetChatInterval = setInterval(

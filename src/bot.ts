@@ -13,6 +13,7 @@ import { Command } from './models/command.interface';
 import { MessageService } from './services/message.service';
 import { map, tap } from 'rxjs/operators';
 import { PSSMessage } from './models/pss-message.interface';
+import { FirestoreService } from './services/firestore.service';
 
 export class DiscordBot {
   private static instance: DiscordBot;
@@ -41,8 +42,11 @@ export class DiscordBot {
     await this.client
       .login(process.env.D_TOKEN)
       .then(async (_) => {
-        const venomy = await this.client.users.fetch('280752268960071680');
-        venomy.send(`I'm alive, master :frog:`);
+        this.client.user?.setActivity({
+          name: `since: ${new Date().toISOString()}`,
+          type: 'PLAYING',
+        });
+
         console.log('Connected to Discord');
       })
       .catch((error) =>
@@ -55,17 +59,21 @@ export class DiscordBot {
    * TODO: Replace this with a database
    */
   private async findChannelAndStartFleetchat() {
-    const channel = await this.client.channels.fetch(
-      process.env.FLEET_CHANNEL as string
-    );
-    if (channel) {
-      DiscordBot.getInstance().fleetChannel = channel as TextChannel;
-      DiscordBot.getInstance().fleetChatInterval = setInterval(
-        () => this.echoFleetChat(),
-        60000
+    try {
+      const channel = await this.client.channels.fetch(
+        process.env.FLEET_CHANNEL as string
       );
-      this.echoFleetChat(),
-        console.log(`Starting fleetchat on boot to ${channel.toString()}`);
+      if (channel) {
+        DiscordBot.getInstance().fleetChannel = channel as TextChannel;
+        DiscordBot.getInstance().fleetChatInterval = setInterval(
+          () => this.echoFleetChat(),
+          60000
+        );
+        this.echoFleetChat(),
+          console.log(`Starting fleetchat on boot to ${channel.toString()}`);
+      }
+    } catch (error) {
+      console.error('Channel not found');
     }
   }
 
@@ -115,11 +123,14 @@ export class DiscordBot {
       }
 
       // Check for the prefix
-      if (!message.content.startsWith('🐸')) {
+      if (!message.content.startsWith(process.env.PREFIX || '🐸')) {
         return;
       }
 
-      const args = message.content.slice('🐸'.length).trim().split(/ +/);
+      const args = message.content
+        .slice((process.env.PREFIX || '🐸').length)
+        .trim()
+        .split(/ +/);
       const command = args.shift()?.toLowerCase()!;
 
       // Log commands run
@@ -167,7 +178,7 @@ export class DiscordBot {
     } else {
       message.channel.startTyping(1);
       await message.channel.send(
-        'You must first set a channel with: `🐸 fleet-chat set #channel-name`'
+        `You must first set a channel with: '${process.env.PREFIX} fleet-chat set #channel-name'`
       );
       message.channel.stopTyping();
     }
@@ -223,7 +234,10 @@ export class DiscordBot {
               `**${message.UserName}**: ${message.Message}`
             );
           });
-        })
+        }),
+        tap((messages: PSSMessage[]) =>
+          FirestoreService.getInstance().addMessages(messages)
+        )
       )
       .subscribe();
   }

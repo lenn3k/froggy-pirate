@@ -8,6 +8,7 @@ module.exports = {
   name: 'fleetchat',
   description: 'Set a channel to echo fleet chat',
   execute(message: Message, args: string[]): void {
+
     const channel = message.mentions.channels.first();
     switch (args[0]) {
       case 'set':

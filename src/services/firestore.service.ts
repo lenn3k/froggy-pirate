@@ -66,8 +66,6 @@ export class FirestoreService {
 
       const [crew, owner] = rest.split(' from ');
 
-      console.log([borrower, crew, owner]);
-
       const donations = await this.db
         .collection('donations')
         .where('owner', '==', owner)
@@ -80,7 +78,6 @@ export class FirestoreService {
           borrower,
           borrowTime: new Date().valueOf(),
         });
-        console.log('crew updated', { borrower, crew, owner });
       } else {
         console.log(`crew not found`, { borrower, crew, owner });
       }

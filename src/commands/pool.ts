@@ -1,6 +1,7 @@
 import { Message, MessageEmbed } from 'discord.js';
 import { FirestoreService } from '../services/firestore.service';
 import { LoginService } from '../services/login.service';
+import { arrayToMessages } from '../utils';
 
 const loginService = LoginService.getInstance();
 
@@ -27,21 +28,24 @@ module.exports = {
         if (borrower) {
           return `**${crew}** from **${owner}** has been borrowed \nby **${borrower}** ${formatTime(
             borrowTimeAgo
-          )} ago \n(Expiration time: ${formatTime(timeLeft)})`;
+          )} ago \n(Expiration time: ${formatTime(timeLeft)})\n\n`;
         } else {
           return `**${crew}** from **${owner}** has not been borrowed yet \n(Expiration time: ${formatTime(
             timeLeft
-          )})`;
+          )})\n\n`;
         }
       });
 
-    const messageEmbed: MessageEmbed = new MessageEmbed()
-      .setColor(`#009900`)
-      .setTitle('Crew in the pool')
-      .setDescription(valid.join(`\n\n`))
-      .setTimestamp();
+    const array = arrayToMessages(valid, 2048);
 
-    message.channel.send(messageEmbed);
+    array.forEach((data) => {
+      const messageEmbed: MessageEmbed = new MessageEmbed()
+        .setColor(`#009900`)
+        .setTitle('Crew in the pool')
+        .setDescription(data)
+        .setTimestamp();
+      message.channel.send(messageEmbed);
+    });
   },
 };
 

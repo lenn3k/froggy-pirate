@@ -7,8 +7,7 @@ const loginService = LoginService.getInstance();
 
 module.exports = {
   name: 'pool',
-  description:
-    'Shows all the crew that are currently in the pool and who has them or had them last',
+  description: 'List all the crew currently in the pool',
   async execute(message: Message, args: string[]): Promise<void> {
     const donations = await FirestoreService.getInstance().getDonations();
 

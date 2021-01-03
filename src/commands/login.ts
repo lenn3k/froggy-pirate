@@ -4,6 +4,7 @@ import { LoginService } from '../services/login.service';
 const loginService = LoginService.getInstance();
 
 module.exports = {
+  hide: true,
   name: 'login',
   description:
     'Attempt to login a sertain amount of times and return the access tokens',

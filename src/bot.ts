@@ -16,33 +16,33 @@ import { PSSMessage } from './models/pss-message.interface';
 import { FirestoreService } from './services/firestore.service';
 
 export class DiscordBot {
-  private static instance: DiscordBot;
+  private static _instance: DiscordBot;
 
-  private client: Client = new Client();
-  private commands: Collection<string, Command> = new Collection();
+  private _client: Client = new Client();
+  private _commands: Collection<string, Command> = new Collection();
 
-  private loginService: LoginService = new LoginService();
-  private messageService: MessageService = new MessageService();
+  private _loginService: LoginService = new LoginService();
+  private _messageService: MessageService = new MessageService();
 
   private _fleetChannel: TextChannel | undefined;
-  private fleetChatInterval: NodeJS.Timeout | undefined;
+  private _fleetChatInterval: NodeJS.Timeout | undefined;
 
   private constructor() {
     this.initialiseClient();
   }
 
   static getInstance(): DiscordBot {
-    if (!DiscordBot.instance) {
-      DiscordBot.instance = new DiscordBot();
+    if (!DiscordBot._instance) {
+      DiscordBot._instance = new DiscordBot();
     }
-    return DiscordBot.instance;
+    return DiscordBot._instance;
   }
 
   async connect() {
-    await this.client
+    await this._client
       .login(process.env.D_TOKEN)
       .then(async (_) => {
-        this.client.user?.setActivity({
+        this._client.user?.setActivity({
           name: `since: ${new Date().toISOString()}`,
           type: 'PLAYING',
         });
@@ -60,12 +60,12 @@ export class DiscordBot {
    */
   private async findChannelAndStartFleetchat() {
     try {
-      const channel = await this.client.channels.fetch(
+      const channel = await this._client.channels.fetch(
         process.env.FLEET_CHANNEL as string
       );
       if (channel) {
         DiscordBot.getInstance().fleetChannel = channel as TextChannel;
-        DiscordBot.getInstance().fleetChatInterval = setInterval(
+        DiscordBot.getInstance()._fleetChatInterval = setInterval(
           () => this.echoFleetChat(),
           60000
         );
@@ -78,7 +78,7 @@ export class DiscordBot {
   }
 
   private initialiseClient(): void {
-    if (!this.client) return;
+    if (!this._client) return;
 
     this.loadCommands();
     this.setReadyHandler();
@@ -93,32 +93,36 @@ export class DiscordBot {
 
     for (const file of commandFiles) {
       const command = require(`./commands/${file}`) as Command;
-      this.commands.set(command.name, command);
+      if (command.name) {
+        this._commands.set(command.name, command);
+      }
     }
   }
 
   private setServices() {
-    this.messageService = MessageService.getInstance();
-    this.loginService = LoginService.getInstance();
+    this._messageService = MessageService.getInstance();
+    this._loginService = LoginService.getInstance();
   }
 
   private setReadyHandler(): void {
-    this.client.on('ready', () => {
-      console.log(`Logged in as ${this.client.user!.tag}!`);
-      this.loginService.login();
+    this._client.on('ready', () => {
+      console.log(`Logged in as ${this._client.user!.tag}!`);
+      this._loginService.login();
     });
   }
 
   private setMessageHandler(): void {
-    this.client.on('message', async (message: Message) => {
+    this._client.on('message', async (message: Message) => {
       // filters out requests from bots
       if (message.author.bot) return;
 
       // Shenanigans
       if (message.content.includes(`<@!280752268960071680>`)) {
-        message.reply(
-          'You better have a good reason to ping master Venomy :frog:'
-        );
+        console.log(message.content);
+        message.react('🐸');
+        // message.reply(
+        //   'You better have a good reason to ping master Venomy :frog:'
+        // );
         return;
       }
 
@@ -138,10 +142,10 @@ export class DiscordBot {
         `command "${command}" with args: [${args}] run by "${message.author.username}" in "${message.channel.type}"`
       );
 
-      if (!this.commands.has(command)) return;
+      if (!this._commands.has(command)) return;
 
       try {
-        this.commands.get(command)!.execute(message, args);
+        this._commands.get(command)!.execute(message, args);
       } catch (error) {
         console.error(error);
         message.reply('there was an error trying to execute that command!');
@@ -163,13 +167,13 @@ export class DiscordBot {
 
   public async startFleetChat(message: Message) {
     if (this.fleetChannel) {
-      if (this.fleetChatInterval) {
+      if (this._fleetChatInterval) {
         message.channel.send(
           `I'm already sending fleet chat to ${this.fleetChannel.toString()}`
         );
         return;
       }
-      this.fleetChatInterval = setInterval(() => this.echoFleetChat(), 60000);
+      this._fleetChatInterval = setInterval(() => this.echoFleetChat(), 60000);
       message.channel.startTyping(1);
       message.channel.send(
         `I have started sending fleet chat to ${this.fleetChannel.toString()}`
@@ -185,14 +189,14 @@ export class DiscordBot {
   }
 
   public async stopFleetChat(message: Message) {
-    if (!this.fleetChannel || !this.fleetChatInterval) {
+    if (!this.fleetChannel || !this._fleetChatInterval) {
       message.channel.startTyping(1);
       await message.channel.send(`I was not reading fleet chat 🤷‍♂️🐸`);
       message.channel.stopTyping();
       return;
     }
 
-    clearInterval(this.fleetChatInterval);
+    clearInterval(this._fleetChatInterval);
     message.channel.startTyping(1);
     message.channel.send(
       `I have stopped sending fleet chat to ${this.fleetChannel.toString()}`
@@ -209,7 +213,7 @@ export class DiscordBot {
       limit: 50,
     });
 
-    await this.messageService
+    await this._messageService
       .getFleetMessage('27763')
       .pipe(
         map((messages: PSSMessage[]) => {
@@ -240,5 +244,9 @@ export class DiscordBot {
         )
       )
       .subscribe();
+  }
+
+  public getCommands() {
+    return this._commands;
   }
 }

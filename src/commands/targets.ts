@@ -12,6 +12,11 @@ const allianceService = AllianceService.getInstance();
 module.exports = {
   name: 'targets',
   description: 'List all targets in given division below given trophy count',
+  useage:
+    'targets <div> <max trophies> \nThe second trophy parameter is optional',
+  example: `${process.env.PREFIX || '🐸'}targets C \n${
+    process.env.PREFIX || '🐸'
+  }targets C 3500`,
   async execute(message: Message, args: string[]): Promise<void> {
     const divArg = args[0];
 

@@ -40,7 +40,10 @@ export class FirestoreService {
     batch.set(document, message);
 
     // If someone is donating, add a donation to the donations collection
-    if (message.ActivityType === `Donated`) {
+    if (
+      message.ActivityType === `Donated` &&
+      !message.Message.toLowerCase().includes('crate')
+    ) {
       const crew = message.Message.split('donated')[1].trim();
       const donation: Donation = {
         owner: message.UserName,

@@ -17,9 +17,11 @@ export class LoginService {
   private deviceLogin11Path = '/UserService/DeviceLogin11';
   private deviceKey: any;
   private checksum: any;
-  private accessToken: string = 'AF974255-FFED-4A81-9626-93EFF87D4012';
+  private accessToken: string | undefined; // = 'AF974255-FFED-4A81-9626-93EFF87D4012';
 
-  constructor() {}
+  constructor() {
+    this.login();
+  }
 
   login(): Observable<any> {
     const params = {
@@ -109,7 +111,10 @@ export class LoginService {
   }
 
   getAccessToken(): string {
-    return this.accessToken;
+    if (!this.hasAccessToken) {
+      throw new Error('No access token, check first');
+    }
+    return this.accessToken || '';
   }
 
   hasAccessToken(): boolean {

@@ -17,7 +17,8 @@ export class LoginService {
   private deviceLogin11Path = '/UserService/DeviceLogin11';
   private deviceKey: any;
   private checksum: any;
-  private accessToken: string | undefined; // = 'AF974255-FFED-4A81-9626-93EFF87D4012';
+  private accessToken: string | undefined =
+    'AF974255-FFED-4A81-9626-93EFF87D4012';
 
   constructor() {
     this.login();

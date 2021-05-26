@@ -1,19 +1,18 @@
 import {
-  Channel,
   Client,
   Collection,
   Message,
-  MessageEmbed,
-  TextChannel,
-} from 'discord.js';
 
-import { LoginService } from './services/login.service';
+  TextChannel
+} from 'discord.js';
 import * as fs from 'fs';
-import { Command } from './models/command.interface';
-import { MessageService } from './services/message.service';
 import { map, tap } from 'rxjs/operators';
+import { Command } from './models/command.interface';
 import { PSSMessage } from './models/pss-message.interface';
 import { FirestoreService } from './services/firestore.service';
+import { LoginService } from './services/login.service';
+import { MessageService } from './services/message.service';
+
 
 export class DiscordBot {
   private static _instance: DiscordBot;
@@ -52,6 +51,7 @@ export class DiscordBot {
       .catch((error) =>
         console.error(`Could not connect. Error: ${error.message}`)
       );
+    //TODO make something better for this...
     this.findChannelAndStartFleetchat();
   }
 
@@ -69,8 +69,8 @@ export class DiscordBot {
           () => this.echoFleetChat(),
           60000
         );
-        this.echoFleetChat(),
-          console.log(`Starting fleetchat on boot to ${channel.toString()}`);
+        await this.echoFleetChat(),
+        console.log(`Starting fleetchat on boot to ${channel.toString()}`);
       }
     } catch (error) {
       console.error('Channel not found');
@@ -105,9 +105,9 @@ export class DiscordBot {
   }
 
   private setReadyHandler(): void {
-    this._client.on('ready', () => {
+    this._client.on('ready', async () => {
       console.log(`Logged in as ${this._client.user!.tag}!`);
-      this._loginService.login();
+      await this._loginService.login();
     });
   }
 
@@ -117,7 +117,7 @@ export class DiscordBot {
       if (message.author.bot) return;
 
       // Shenanigans
-      if (message.content.includes(`<@!280752268960071680>`)) {
+      if (message.content.includes('<@!280752268960071680>')) {
         console.log(message.content);
         message.react('🐸');
         // message.reply(
@@ -131,6 +131,8 @@ export class DiscordBot {
         return;
       }
 
+      //await message.react('🐸');
+
       const args = message.content
         .slice((process.env.PREFIX || '🐸').length)
         .trim()
@@ -142,13 +144,20 @@ export class DiscordBot {
         `command "${command}" with args: [${args}] run by "${message.author.username}" in "${message.channel.type}"`
       );
 
-      if (!this._commands.has(command)) return;
+      if (!this._commands.has(command))
+       {
+        await message.reactions.removeAll();
+        await message.react('🛑');
+        return
+      };
 
       try {
         this._commands.get(command)!.execute(message, args);
       } catch (error) {
         console.error(error);
-        message.reply('there was an error trying to execute that command!');
+        await message.reply('there was an error trying to execute that command!');
+        await message.reactions.removeAll();
+        await message.react('🛑');
       }
     });
   }
@@ -174,34 +183,34 @@ export class DiscordBot {
         return;
       }
       this._fleetChatInterval = setInterval(() => this.echoFleetChat(), 60000);
-      message.channel.startTyping(1);
+       
       message.channel.send(
         `I have started sending fleet chat to ${this.fleetChannel.toString()}`
       );
-      message.channel.stopTyping();
+      
     } else {
-      message.channel.startTyping(1);
+       
       await message.channel.send(
         `You must first set a channel with: '${process.env.PREFIX} fleet-chat set #channel-name'`
       );
-      message.channel.stopTyping();
+      
     }
   }
 
   public async stopFleetChat(message: Message) {
     if (!this.fleetChannel || !this._fleetChatInterval) {
-      message.channel.startTyping(1);
-      await message.channel.send(`I was not reading fleet chat 🤷‍♂️🐸`);
-      message.channel.stopTyping();
+       
+      await message.channel.send('I was not reading fleet chat 🤷‍♂️🐸');
+      
       return;
     }
 
     clearInterval(this._fleetChatInterval);
-    message.channel.startTyping(1);
+     
     message.channel.send(
       `I have stopped sending fleet chat to ${this.fleetChannel.toString()}`
     );
-    message.channel.stopTyping();
+    
   }
 
   public async echoFleetChat() {

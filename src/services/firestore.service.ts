@@ -41,7 +41,7 @@ export class FirestoreService {
 
     // If someone is donating, add a donation to the donations collection
     if (
-      message.ActivityType === `Donated` &&
+      message.ActivityType === 'Donated' &&
       !message.Message.toLowerCase().includes('crate')
     ) {
       const crew = message.Message.split('donated')[1].trim();
@@ -82,7 +82,7 @@ export class FirestoreService {
           borrowTime: new Date().valueOf(),
         });
       } else {
-        console.log(`crew not found`, { borrower, crew, owner });
+        console.log('crew not found', { borrower, crew, owner });
       }
     }
 
@@ -92,7 +92,11 @@ export class FirestoreService {
       .where('expirationTime', '<', new Date().valueOf())
       .get();
 
-    toBeDeleted.forEach((doc) => doc.ref.delete());
+      try {
+        toBeDeleted.forEach((doc) => doc.ref.delete());
+      } catch (error) {
+        console.log('Crew already deleted',error)
+      }
   }
 
   public addMessages(messages: PSSMessage[]) {

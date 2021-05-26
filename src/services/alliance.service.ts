@@ -1,12 +1,11 @@
-import { AxiosResponse } from 'axios';
-import { LoginService } from './login.service';
+import Axios, { AxiosResponse } from 'axios';
+import { from, Observable } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 import * as convert from 'xml-js';
-import { Observable } from 'rxjs';
-import { catchError, map, switchMap, tap } from 'rxjs/operators';
-import { $Axios } from '../axios-observable';
 import { Fleet } from '../models/fleet.model';
 import { User } from '../models/user.model';
 import { drilldown } from '../utils';
+import { LoginService } from './login.service';
 
 export class AllianceService {
   private static instance: AllianceService;
@@ -22,17 +21,18 @@ export class AllianceService {
 
   constructor() {}
 
-  getFleets(from?: number, to?: number): Observable<any[]> {
+  getFleets(fromRank?: number, to?: number): Observable<any[]> {
     const params = {
-      skip: from ? from.toString(10) : '0',
-      take: to && from ? (to - from).toString(10) : '100',
+      skip: fromRank ? fromRank.toString(10) : '0',
+      take: to && fromRank ? (to - fromRank).toString(10) : '100',
     };
 
-    return $Axios
+
+    return from(Axios
       .get(process.env.API + this.serviceUrl, {
         params,
         responseType: 'text',
-      })
+      }))
       .pipe(
         map((response: AxiosResponse) => response.data),
         map((data: string) =>
@@ -70,11 +70,11 @@ export class AllianceService {
       skip: '0',
       take: '100',
     };
-    return $Axios
+    return from(Axios
       .get(process.env.API + this.fleetUserUrl, {
         params,
         responseType: 'text',
-      })
+      }))
       .pipe(
         map((response: AxiosResponse) => response.data),
         map((response: string) =>

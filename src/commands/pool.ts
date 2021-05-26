@@ -39,7 +39,7 @@ module.exports = {
 
     array.forEach((data) => {
       const messageEmbed: MessageEmbed = new MessageEmbed()
-        .setColor(`#009900`)
+        .setColor('#009900')
         .setTitle('Crew in the pool')
         .setDescription(data)
         .setTimestamp();

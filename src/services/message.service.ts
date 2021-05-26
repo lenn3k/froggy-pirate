@@ -1,11 +1,10 @@
-import { AxiosResponse } from 'axios';
+import Axios, { AxiosResponse } from 'axios';
+import { from, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import * as convert from 'xml-js';
-import { $Axios } from '../axios-observable';
-import { map, tap } from 'rxjs/operators';
-import { Observable } from 'rxjs';
-import { LoginService } from './login.service';
-import { drilldown } from '../utils';
 import { PSSMessage } from '../models/pss-message.interface';
+import { drilldown } from '../utils';
+import { LoginService } from './login.service';
 
 export class MessageService {
   private static instance: MessageService;
@@ -27,11 +26,11 @@ export class MessageService {
       accessToken: accessToken,
       ChannelKey: `alliance-${fleetId}`,
     };
-    return $Axios
+    return from(Axios
       .get(process.env.API + this.messagePath, {
         params,
         responseType: 'text',
-      })
+      }))
       .pipe(
         map((response: AxiosResponse) => response.data),
         map((response: string) =>

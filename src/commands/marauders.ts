@@ -8,7 +8,7 @@ module.exports = {
   name: 'marauders',
   description: 'List all Hellfire Marauders with starcount and trophy count',
   async execute(message: Message, args: string[]): Promise<void> {
-    message.channel.startTyping(1);
+     
 
     await AllianceService.getInstance()
       .getUsersForFleetId('27763')
@@ -43,7 +43,7 @@ module.exports = {
               .setTimestamp()
           )
         );
-        message.channel.stopTyping();
+        
       });
   },
 };

@@ -1,11 +1,10 @@
 import { Message, MessageEmbed } from 'discord.js';
 import { forkJoin } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
-import { DiscordBot } from '../bot';
 import { Fleet } from '../models/fleet.model';
 import { User } from '../models/user.model';
 import { AllianceService } from '../services/alliance.service';
-import { calcValue, arrayToMessages, sortByStarsAndTrophy } from '../utils';
+import { arrayToMessages, calcValue, sortByStarsAndTrophy } from '../utils';
 
 const allianceService = AllianceService.getInstance();
 
@@ -45,19 +44,20 @@ module.exports = {
       return;
     }
 
-    message.channel.startTyping();
     await allianceService
       .getFleetsForDiv(div)
       .pipe(
+        
         tap((fleetList: Fleet[]) => {
           if (fleetList.length === 0) {
             message.channel.send('I was not able to find fleets in div ' + div);
             message.channel.send(
               'Make sure you entered a correct division (A, B, C, D) and that the tournament is currently running'
             );
-            message.channel.stopTyping();
+            
           }
         }),
+        
         map((fleetList: Fleet[]) =>
           fleetList.map((fleet) =>
             allianceService.getUsersForFleetId(fleet.AllianceId)
@@ -69,10 +69,10 @@ module.exports = {
         )
       )
       .pipe(
-        // Filter out marauders
-        map((userList: User[]) =>
-          userList.filter((user) => user.AllianceId !== '27763')
-        ),
+        // // Filter out marauders
+        // map((userList: User[]) =>
+        //   userList.filter((user) => user.AllianceId !== '27763')
+        // ),
 
         // Filter by trophy limit
         map((userList: User[]) =>
@@ -106,8 +106,7 @@ module.exports = {
           message.channel.send(
             'I found no targets for the inputs you provided'
           );
-          message.channel.stopTyping();
-
+          
           return;
         }
 
@@ -122,7 +121,7 @@ module.exports = {
               .setTimestamp()
           )
         );
-        message.channel.stopTyping();
+        
       });
   },
 };

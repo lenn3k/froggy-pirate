@@ -1,9 +1,7 @@
-import { AxiosResponse } from 'axios';
+import Axios, { AxiosResponse } from 'axios';
+import { from, interval, Observable } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
 import { Md5 } from 'ts-md5';
-import { $Axios } from '../axios-observable';
-import { map, tap } from 'rxjs/operators';
-import { Observable } from 'rxjs';
-import { time } from 'console';
 
 export class LoginService {
   private static instance: LoginService;
@@ -21,6 +19,8 @@ export class LoginService {
   // 'AF974255-FFED-4A81-9626-93EFF87D4012';
 
   constructor() {
+    //Every 30 minutes
+    interval(30*60*1000).subscribe(()=> this.login())
     this.login();
   }
 
@@ -34,16 +34,17 @@ export class LoginService {
       advertisingkey: '""',
     };
 
-    return $Axios
+    return from(Axios
       .post(
         process.env.API + this.loginPath,
         {},
         { params, responseType: 'text' }
-      )
+      ))
       .pipe(
         tap((response: AxiosResponse<string>) => {
           this.accessToken = response.data.match(/accessToken="(.*?)"/)![1];
-        })
+        }),
+        catchError((err,caught)=>{console.error('login',err);return caught;})
       );
   }
 
@@ -51,7 +52,7 @@ export class LoginService {
     const { time, checksum } = this.getChecksum11();
 
     const params = {
-      deviceKey: `465e7484d8cacc3c`,
+      deviceKey: '465e7484d8cacc3c',
       isJailBroken: 'false',
       checksum,
       time,
@@ -61,12 +62,12 @@ export class LoginService {
     };
     console.log(JSON.stringify(params));
 
-    return $Axios
+    return from(Axios
       .post<string>(
         process.env.API + this.deviceLogin11Path,
         {},
         { params, responseType: 'text' }
-      )
+      ))
       .pipe(
         tap((response: AxiosResponse<string>) => {
           const token = response.data.match(/accessToken="(.*?)"/);

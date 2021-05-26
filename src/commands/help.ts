@@ -20,12 +20,12 @@ module.exports = {
         const output = [
           '```',
           cmd?.name,
-          ``,
+          '',
           cmd?.description,
-          ``,
+          '',
           cmd?.useage,
-          ``,
-          `Examples:`,
+          '',
+          'Examples:',
           cmd?.example,
           '```',
         ];
@@ -52,8 +52,8 @@ module.exports = {
       `Aye ${message.author.username}, What do you wish to know?`,
       '```Ask me one of the following:\n',
       commandMessages.join('\n'),
-      ``,
-      `Type /help command for more info on a command.`,
+      '',
+      'Type /help command for more info on a command.',
       '```',
     ].join('\n');
     message.channel.send(output);

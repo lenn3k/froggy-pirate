@@ -1,6 +1,6 @@
 import { User } from './models/user.model';
 
-export function sliceData(data: string, length: number = 1024): string[] {
+export function sliceData(data: string, length = 1024): string[] {
   const result: string[] = [];
   let index = 0;
   while (true) {
@@ -17,7 +17,7 @@ export function sliceData(data: string, length: number = 1024): string[] {
 
 export function arrayToMessages(
   data: string[],
-  length: number = 1024
+  length = 1024
 ): string[] {
   const result: string[] = [];
   let index = 0;

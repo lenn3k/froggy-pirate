@@ -1,8 +1,10 @@
-import { DiscordBot } from './bot';
+import dotenv from 'dotenv';
 import firebase from 'firebase/app';
 import 'firebase/firestore';
+import { DiscordBot } from './bot';
 
-require('dotenv').config();
+
+dotenv.config();
 
 const firebaseConfig = {
   apiKey: process.env.FB_API_KEY,

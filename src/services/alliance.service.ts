@@ -14,6 +14,7 @@ export class AllianceService {
     return AllianceService.instance;
   }
   private serviceUrl = '/AllianceService/ListAlliancesByRanking';
+  private fleetByDivUrl =  '/AllianceService/ListAlliancesByDivision'
   private fleetUserUrl = '/AllianceService/ListUsers';
   private loginService = LoginService.getInstance();
 
@@ -41,7 +42,20 @@ export class AllianceService {
   async getFleetsForDiv(div: string): Promise<Fleet[]> {
     const divMap: Record<string,string> = { A: '1', B: '2', C: '3', D: '4' };
     const divisionDesignId = divMap[div];
-    return (await this.getFleets()).filter((fleet) => fleet.DivisionDesignId === divisionDesignId);
+
+    const params = {divisionDesignId};
+
+    const {data} = await Axios
+      .get(process.env.API + this.fleetByDivUrl, {
+        params,
+        responseType: 'text',
+      }).catch(err => {console.error(err); return {data:err};});
+     
+      
+    const dataJson = JSON.parse(convert.xml2json(data, { compact: true }));
+      
+    return  drilldown<Fleet>(dataJson);
+
   }
 
   async getUsersForFleetId(fleetId: string): Promise<User[]> {

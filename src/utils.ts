@@ -1,11 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { User } from './models/user.model';
 
 export function sliceData(data: string, length = 1024): string[] {
   const result: string[] = [];
   let index = 0;
-  while (true) {
+  let slicing = true;
+  while (slicing) {
     if (index + length > data.length) {
       result.push(data.substr(index));
+      slicing = false;
       break;
     }
     result.push(data.substr(index, length));

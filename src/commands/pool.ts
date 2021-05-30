@@ -1,14 +1,13 @@
 import { Message, MessageEmbed } from 'discord.js';
 import { FirestoreService } from '../services/firestore.service';
-import { LoginService } from '../services/login.service';
 import { arrayToMessages } from '../utils';
 
-const loginService = LoginService.getInstance();
 
 module.exports = {
   name: 'pool',
+  hide:true,
   description: 'List all the crew currently in the pool',
-  async execute(message: Message, args: string[]): Promise<void> {
+  async execute(message: Message): Promise<void> {
     const donations = await FirestoreService.getInstance().getDonations();
 
     const valid = donations

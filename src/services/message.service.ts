@@ -17,8 +17,6 @@ export class MessageService {
   private messagePath = '/MessageService/ListMessagesForChannelKey';
   private loginService = LoginService.getInstance();
 
-  constructor() {}
-
   getFleetMessage(fleetId: string): Observable<PSSMessage[]> {
     const accessToken = this.loginService.getAccessToken();
 

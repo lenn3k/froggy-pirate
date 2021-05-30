@@ -53,7 +53,10 @@ module.exports = {
       '```Ask me one of the following:\n',
       commandMessages.join('\n'),
       '',
-      'Type /help command for more info on a command.',
+      'Type :frog: help command for more info on a command.',
+      '',
+      'My creator is venomy#1332',
+      'Feel free to DM him if I die or do weird stuff',
       '```',
     ].join('\n');
     message.channel.send(output);

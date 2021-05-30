@@ -17,7 +17,7 @@ export class FirestoreService {
   constructor() {
     const serviceAccount: ServiceAccount = {
       clientEmail: process.env.FB_CLIENT_EMAIL,
-      privateKey: process.env.FB_PRIVATE_KEY!.replace(/\\n/g, '\n'),
+      privateKey: process.env.FB_PRIVATE_KEY?.replace(/\\n/g, '\n'),
       projectId: process.env.FB_PROJECT_ID,
     };
 
@@ -58,7 +58,7 @@ export class FirestoreService {
 
       batch.set(donationDoc, donation);
     }
-    await batch.commit();
+    await batch.commit().catch(err => console.error(err));
 
     // If someone is borrowing
     if (message.Message.includes('borrowed')) {
@@ -80,7 +80,7 @@ export class FirestoreService {
         await donation.ref.update({
           borrower,
           borrowTime: new Date().valueOf(),
-        });
+        }).catch(err=> console.error(err));
       } else {
         console.log('crew not found', { borrower, crew, owner });
       }
@@ -92,15 +92,15 @@ export class FirestoreService {
       .where('expirationTime', '<', new Date().valueOf())
       .get();
 
-      try {
-        toBeDeleted.forEach((doc) => doc.ref.delete());
-      } catch (error) {
-        console.log('Crew already deleted',error)
-      }
+    try {
+      await Promise.all(toBeDeleted.docs.map(doc=>doc.ref.delete()));
+    } catch (error) {
+      console.log('Crew already deleted',error);
+    }
   }
 
-  public addMessages(messages: PSSMessage[]) {
-    messages.forEach((message) => this.addMessage(message));
+  public async addMessages(messages: PSSMessage[]): Promise<void> {
+    await Promise.all(messages.map((message) => this.addMessage(message)));
   }
 
   public async getDonations(): Promise<Donation[]> {

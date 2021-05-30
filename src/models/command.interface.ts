@@ -6,5 +6,5 @@ export interface Command {
   useage?: string;
   example?: string;
   hide?: boolean;
-  execute(message: Message, args: string[]): void;
+  execute(message: Message, args?: string[]): void;
 }

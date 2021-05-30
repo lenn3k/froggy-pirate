@@ -14,6 +14,7 @@ import { LoginService } from './services/login.service';
 import { MessageService } from './services/message.service';
 
 
+
 export class DiscordBot {
   private static _instance: DiscordBot;
 
@@ -37,10 +38,10 @@ export class DiscordBot {
     return DiscordBot._instance;
   }
 
-  async connect() {
+  async connect():Promise<void> {
     await this._client
       .login(process.env.D_TOKEN)
-      .then(async (_) => {
+      .then(async () => {
         this._client.user?.setActivity({
           name: `since: ${new Date().toISOString()}`,
           type: 'PLAYING',
@@ -92,6 +93,7 @@ export class DiscordBot {
       .filter((file) => file.endsWith('.js'));
 
     for (const file of commandFiles) {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const command = require(`./commands/${file}`) as Command;
       if (command.name) {
         this._commands.set(command.name, command);
@@ -106,7 +108,7 @@ export class DiscordBot {
 
   private setReadyHandler(): void {
     this._client.on('ready', async () => {
-      console.log(`Logged in as ${this._client.user!.tag}!`);
+      console.log(`Logged in as ${this._client.user?.tag}!`);
       await this._loginService.login();
     });
   }
@@ -116,15 +118,14 @@ export class DiscordBot {
       // filters out requests from bots
       if (message.author.bot) return;
 
+      if(message.type)
+
       // Shenanigans
-      if (message.content.includes('<@!280752268960071680>')) {
-        console.log(message.content);
-        message.react('🐸');
-        // message.reply(
-        //   'You better have a good reason to ping master Venomy :frog:'
-        // );
-        return;
-      }
+        if (message.content.includes('<@!280752268960071680>')) {
+          console.log(message.content);
+          await message.react('🐸');
+          return;
+        }
 
       // Check for the prefix
       if (!message.content.startsWith(process.env.PREFIX || '🐸')) {
@@ -137,7 +138,7 @@ export class DiscordBot {
         .slice((process.env.PREFIX || '🐸').length)
         .trim()
         .split(/ +/);
-      const command = args.shift()?.toLowerCase()!;
+      const command = args.shift()?.toLowerCase() as string;
 
       // Log commands run
       console.log(
@@ -145,16 +146,16 @@ export class DiscordBot {
       );
 
       if (!this._commands.has(command))
-       {
+      {
         await message.reactions.removeAll();
         await message.react('🛑');
-        return
-      };
+        return;
+      }
 
       try {
-        this._commands.get(command)!.execute(message, args);
+        this._commands.get(command)?.execute(message, args);
       } catch (error) {
-        console.error(error);
+        //console.error(error);
         await message.reply('there was an error trying to execute that command!');
         await message.reactions.removeAll();
         await message.react('🛑');
@@ -170,21 +171,21 @@ export class DiscordBot {
     return this._fleetChannel;
   }
 
-  public setFleetChannel(channel: TextChannel) {
+  public setFleetChannel(channel: TextChannel): void {
     this.fleetChannel = channel;
   }
 
-  public async startFleetChat(message: Message) {
+  public async startFleetChat(message: Message): Promise<void> {
     if (this.fleetChannel) {
       if (this._fleetChatInterval) {
-        message.channel.send(
+        await message.channel.send(
           `I'm already sending fleet chat to ${this.fleetChannel.toString()}`
         );
         return;
       }
       this._fleetChatInterval = setInterval(() => this.echoFleetChat(), 60000);
        
-      message.channel.send(
+      await message.channel.send(
         `I have started sending fleet chat to ${this.fleetChannel.toString()}`
       );
       
@@ -197,7 +198,7 @@ export class DiscordBot {
     }
   }
 
-  public async stopFleetChat(message: Message) {
+  public async stopFleetChat(message: Message): Promise<void> {
     if (!this.fleetChannel || !this._fleetChatInterval) {
        
       await message.channel.send('I was not reading fleet chat 🤷‍♂️🐸');
@@ -207,13 +208,13 @@ export class DiscordBot {
 
     clearInterval(this._fleetChatInterval);
      
-    message.channel.send(
+    await message.channel.send(
       `I have stopped sending fleet chat to ${this.fleetChannel.toString()}`
     );
     
   }
 
-  public async echoFleetChat() {
+  public async echoFleetChat(): Promise<void> {
     if (!this.fleetChannel) {
       return;
     }
@@ -243,7 +244,7 @@ export class DiscordBot {
         }),
         tap((messages: PSSMessage[]) => {
           messages.forEach((message: PSSMessage) => {
-            this.fleetChannel!.send(
+            this.fleetChannel?.send(
               `**${message.UserName}**: ${message.Message}`
             );
           });
@@ -255,7 +256,7 @@ export class DiscordBot {
       .subscribe();
   }
 
-  public getCommands() {
+  public getCommands(): Collection<string, Command> {
     return this._commands;
   }
 }
